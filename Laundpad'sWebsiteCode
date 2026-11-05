@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Launchpad Rocks</title>
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/favicon-32.png">
+        <style>
+            :root {
+                --ink: #f8f7f6cf;
+                --paper: #100a00ff;
+                --paper-deep: #efe6d6;
+                --accent: #fbfaf9ff;
+                --muted: #6e655b;
+                --rule: #d6cabb;
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html, body {
+                margin: 0;
+                color: var(--ink);
+                background: black;
+                font-family: arial, sans-serif;
+                min-height: 100vh;
+                overflow-x: hidden;
+            }
+
+            html.modal-open,
+            body.modal-open {
+                overflow: hidden;
+                overscroll-behavior: none;
+            }
+
+            .launch-shake {
+                animation: launch-shake 2400ms linear 1 both;
+            }
+
+            .launch-shake-violent {
+                animation: launch-shake-violent 120ms linear infinite;
+            }
+
+            @keyframes launch-shake {
+                0% { transform: translate(0, 0); }
+                5% { transform: translate(-6px, 4px); }
+                10% { transform: translate(5px, -6px); }
+                18% { transform: translate(-7px, 3px); }
+                26% { transform: translate(6px, -5px); }
+                34% { transform: translate(-4px, 3px); }
+                45% { transform: translate(4px, -3px); }
+                58% { transform: translate(-3px, 2px); }
+                72% { transform: translate(2px, -2px); }
+                86% { transform: translate(-1px, 1px); }
+                100% { transform: translate(0, 0); }
+            }
+
+            @keyframes launch-shake-violent {
+                0% { transform: translate(0, 0); }
+                20% { transform: translate(-10px, 6px); }
+                40% { transform: translate(8px, -9px); }
+                60% { transform: translate(-9px, 5px); }
+                80% { transform: translate(9px, -6px); }
+                100% { transform: translate(0, 0); }
+            }
+
+            .wrap {
+                margin: 0;
+                padding: 0 10px;
+            }
+
+            .rocket-link {
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                width: 61px;
+                height: 61px;
+                z-index: 10;
+                opacity: 0.8;
+                transition: transform 140ms ease, opacity 140ms ease;
+            }
+
+            .rocket-link:hover {
+                transform: translateY(-2px) scale(1.05);
+                opacity: 1;
+            }
+
+            .rocket-link img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+
+            h1 {
+                font-size: clamp(2.6rem, 4vw, 4rem);
+                letter-spacing: -0.02em;
+                margin: 0;
+                text-transform: uppercase;
+            }
+
+            .tagline {
+                font-size: 1.05rem;
+                line-height: 1.5;
+                max-width: 520px;
+                margin: 0;
+                color: var(--muted);
+            }
+
+            .event-row {
+                display: flex;
+                gap: 0;
+                align-items: flex-start;
+                text-decoration: none;
+                color: inherit;
+                padding: 3px 0;
+                cursor: pointer;
+                transform-origin: center;
+                transition: transform 500ms ease;
+                will-change: transform;
+            }
+
+            .event-row:hover {
+                color: var(--accent);
+            }
+
+            .event-date {
+                font-size: 0.90rem;
+                letter-spacing: 0.06em;
+                text-transform: uppercase;
+                color: var(--accent);
+                flex: 0 0 45px;
+            }
+
+            .event-title {
+                font-size: 2rem;
+                line-height: 1;
+                text-transform: uppercase;
+                font-family: monospace, sans-serif;
+                text-wrap: nowrap;
+                word-spacing: 5px;
+                overflow: hidden;
+            }
+
+            .event-title span {
+                display: inline-block;
+                padding-right: 32px;
+            }
+
+            .event-title.is-scrolling span {
+                animation: title-scroll var(--scroll-duration, 6s) linear infinite;
+            }
+
+            @keyframes title-scroll {
+                from { transform: translateX(0); }
+                to { transform: translateX(calc(-1 * var(--scroll-distance, 0px))); }
+            }
+
+            .modal {
+                position: fixed;
+                inset: 0;
+                /* background: rgba(0, 0, 0, 0.75); */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 24px;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 160ms ease;
+                z-index: 20;
+            }
+
+            .modal.is-open {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .modal-shell {
+                background: #0c0a08;
+                color: var(--ink);
+                max-width: 900px;
+                width: 100%;
+                max-height: 85vh;
+                overflow: auto;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+                position: relative;
+                padding: 24px;
+            }
+
+            .modal-close {
+                position: absolute;
+                top: 0px;
+                right: 6px;
+                background: transparent;
+                border: none;
+                color: var(--ink);
+                font-size: 2.4rem;
+                cursor: pointer;
+                text-shadow: 2px 2px 2px rgba(0, 0, 0, .8);
+            }
+
+            .modal-body {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+
+            .modal-body a {
+                color: #ffb48a;
+            }
+
+            .modal-body .flyer {
+                width: 300px;
+                max-width: 300px;
+                margin: 0 auto 16px;
+            }
+
+            .modal-body .flyer img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .modal-body .buy {
+                margin: 12px 0 6px;
+            }
+
+            .modal-body .buy a {
+                display: inline-block;
+                padding: 10px 18px;
+                background: #ff6a00;
+                color: #1b0d00;
+                font-weight: 700;
+                font-size: 1.05rem;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                border: 2px solid #1b0d00;
+                box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.45);
+                text-decoration: none;
+            }
+
+            .empty {
+                font-size: 1.1rem;
+                color: var(--muted);
+            }
+
+            .footer {
+                margin-top: 48px;
+                font-size: 1.6rem;
+                color: var(--muted);
+                position: relative;
+                padding: 20px;
+                transition: box-shadow 300ms ease, color 300ms ease;
+            }
+
+            .footer-nav {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 16px 24px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                font-size: 1.4rem;
+            }
+
+            .footer-nav a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .footer-nav a:hover {
+                color: var(--accent);
+            }
+
+            .footer-glow {
+                color: #ffb48a;
+                box-shadow:
+                    0 -20px 60px rgba(255, 120, 40, 0.35),
+                    0 -6px 18px rgba(255, 90, 20, 0.6);
+                animation: footer-glow 2400ms ease-out 1 both;
+            }
+            .address {
+                margin-top: 12px;
+            }
+
+            @keyframes footer-glow {
+                0% {
+                    box-shadow:
+                        0 -28px 80px rgba(255, 120, 40, 0.5),
+                        0 -8px 22px rgba(255, 90, 20, 0.7);
+                    opacity: 1;
+                }
+                70% {
+                    box-shadow:
+                        0 -12px 40px rgba(255, 120, 40, 0.3),
+                        0 -4px 14px rgba(255, 90, 20, 0.4);
+                    opacity: 0.9;
+                }
+                100% {
+                    box-shadow:
+                        0 -4px 10px rgba(255, 120, 40, 0.1),
+                        0 -2px 6px rgba(255, 90, 20, 0.15);
+                    opacity: 0.7;
+                }
+            }
+
+            @media (max-width: 640px) {
+                .event-row {
+                    padding: 1px 0;
+                }
+
+                .event-date {
+                    font-size: 0.75rem;
+                }
+
+                .event-title {
+                    font-size: 1.2rem;
+                }
+                .modal-shell {
+                    padding: 0px;
+                }
+
+                .modal-body .flyer {
+                    width: 100%;
+                    max-width: 100%;
+                }
+
+                .modal-body .header-event-box h1 {
+                    font-size: 1.35rem;
+                }
+
+                .modal-body .buy {
+                    text-align: center;
+                }
+                .modal-close {
+                    position: fixed;
+                    top: 31px;
+                    right: 5px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <a class="rocket-link" href="#footer" aria-label="Jump to footer">
+            <img src="/assets/images/rocket_cropped.webp" alt="">
+        </a>
+        <main class="wrap">
+                            <section class="events">
+                    
+                        <div class="event-row" data-event-id="468362">
+                            <div class="event-date">
+                                Nov<br><span class="dom">05</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Break the Earth * Distorted Evil * Ashes of Jupiter * Flood the Sun</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="466631">
+                            <div class="event-date">
+                                Nov<br><span class="dom">06</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Russian Girlfriends &amp; Coma Recovery Double Record Release Party</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467175">
+                            <div class="event-date">
+                                Nov<br><span class="dom">07</span>
+                            </div>
+                            <div class="event-title">
+                                <span>The Mango Cakes * The Riddims * The Regular * DJ Buddhafunk</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="465244">
+                            <div class="event-date">
+                                Nov<br><span class="dom">08</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Ouija Macc * Darby O&#039;Trill * Mikey Rotten</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="465490">
+                            <div class="event-date">
+                                Nov<br><span class="dom">11</span>
+                            </div>
+                            <div class="event-title">
+                                <span>2Dead Boys</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468728">
+                            <div class="event-date">
+                                Nov<br><span class="dom">12</span>
+                            </div>
+                            <div class="event-title">
+                                <span>GTA 5LEAZE NITE - &quot;The Last Ride&quot;</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="464319">
+                            <div class="event-date">
+                                Nov<br><span class="dom">13</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Kaotic State * Deforme * Unseen Espiritu * Ritual Noise Abuse * Destroy To Recreate</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="463324">
+                            <div class="event-date">
+                                Nov<br><span class="dom">14</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Violet Grohl - Be Sweet To Me Tour </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="462540">
+                            <div class="event-date">
+                                Nov<br><span class="dom">15</span>
+                            </div>
+                            <div class="event-title">
+                                <span>INOHA - This Might Be Useful Tour </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="464988">
+                            <div class="event-date">
+                                Nov<br><span class="dom">16</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Locked Shut * Rust * Music Is The Enemy * Plunge</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468627">
+                            <div class="event-date">
+                                Nov<br><span class="dom">19</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Hula Ghost * Crash Bandits * One Hand Loose</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="464660">
+                            <div class="event-date">
+                                Nov<br><span class="dom">20</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Forbidden - Chaos By Design US Tour 2026</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="461280">
+                            <div class="event-date">
+                                Nov<br><span class="dom">21</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Holy Wave * Queen Serene * The Art Dept. * Train Conductor</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467769">
+                            <div class="event-date">
+                                Nov<br><span class="dom">22</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Riff Raff - Neon Nighthawk Tour </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="463353">
+                            <div class="event-date">
+                                Nov<br><span class="dom">24</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Thoughts on Bowling * Softly * HummusVacuum * MooseCreek Park</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468616">
+                            <div class="event-date">
+                                Nov<br><span class="dom">25</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Rising Water Relief: A Benefit Showcase for Families in NM</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467979">
+                            <div class="event-date">
+                                Dec<br><span class="dom">04</span>
+                            </div>
+                            <div class="event-title">
+                                <span>NMDM&#039;s 12th Annual Brutal Christmas Drive</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468003">
+                            <div class="event-date">
+                                Dec<br><span class="dom">10</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Roadside Memorial * Laughing Dog * Intentional Misuse * Smoregasborg </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="466717">
+                            <div class="event-date">
+                                Dec<br><span class="dom">11</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Guilt Trip * Gates To Hell * Mauled</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="463042">
+                            <div class="event-date">
+                                Dec<br><span class="dom">12</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Emo Nite </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="462876">
+                            <div class="event-date">
+                                Dec<br><span class="dom">15</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Kingdom Of Giants * Deadlands * Holy Wars * Night Rider </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="462975">
+                            <div class="event-date">
+                                Dec<br><span class="dom">18</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Save Ferris * Red Light Cameras * Rocksteady Pickups * DJ Rootz Rocka </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="463004">
+                            <div class="event-date">
+                                Dec<br><span class="dom">19</span>
+                            </div>
+                            <div class="event-title">
+                                <span>6th Annual Apparition: Krampus Night</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468702">
+                            <div class="event-date">
+                                Dec<br><span class="dom">26</span>
+                            </div>
+                            <div class="event-title">
+                                <span>The Sadder Day After Xmas</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="456765">
+                            <div class="event-date">
+                                Dec<br><span class="dom">31</span>
+                            </div>
+                            <div class="event-title">
+                                <span>New Year&#039;s Eve Dance Party at Launchpad </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="466706">
+                            <div class="event-date">
+                                Jan<br><span class="dom">14</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Escape From The Zoo | ABQ, NM</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467669">
+                            <div class="event-date">
+                                Jan<br><span class="dom">17</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Paradise Blossom</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="464317">
+                            <div class="event-date">
+                                Jan<br><span class="dom">19</span>
+                            </div>
+                            <div class="event-title">
+                                <span> Koffin Kats * The Last Gang * Starving Wolves </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468054">
+                            <div class="event-date">
+                                Jan<br><span class="dom">20</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Leæther Strip * Damascus Knives * Dot.Wall * DJ K.0ss</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="461831">
+                            <div class="event-date">
+                                Jan<br><span class="dom">21</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Dopethrone * (16 ) * Armed For The Apocalypse * Abscönd</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="466284">
+                            <div class="event-date">
+                                Jan<br><span class="dom">23</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Emo Night Karaoke </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="466897">
+                            <div class="event-date">
+                                Jan<br><span class="dom">27</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Ballyhoo! - We Ride At Dawn Tour </span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="463904">
+                            <div class="event-date">
+                                Feb<br><span class="dom">03</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Nervosa * Embryonic Autopsy * Nocturne</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467526">
+                            <div class="event-date">
+                                Feb<br><span class="dom">07</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Surfer Girl * South Summit * JOBY!</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="467650">
+                            <div class="event-date">
+                                Feb<br><span class="dom">22</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Big D &amp; the Kids Table * Hell Beach</span>
+                            </div>
+                        </div>
+                    
+                        
+                        <div class="event-row" data-event-id="468273">
+                            <div class="event-date">
+                                Mar<br><span class="dom">05</span>
+                            </div>
+                            <div class="event-title">
+                                <span>Cloud Nothings </span>
+                            </div>
+                        </div>
+                    
+                                        </section>
+                        <style>
+    .footer .footer-item {
+        position: relative;
+    }
+
+    .footer-toggle {
+        background: none;
+        border: 0;
+        color: inherit;
+        font: inherit;
+        text-transform: inherit;
+        letter-spacing: inherit;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .footer-subnav {
+        list-style: none;
+        margin: 8px 0 0;
+        padding: 0;
+        display: none;
+        gap: 6px;
+        flex-direction: column;
+        font-size: 0.95rem;
+        text-transform: none;
+        letter-spacing: 0.02em;
+    }
+
+    .footer-subnav.is-open {
+        display: flex;
+    }
+
+    .footer-subnav a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .footer-subnav a:hover {
+        color: var(--accent);
+    }
+
+    .footer-subnav .is-hidden {
+        display: none;
+    }
+</style>
+<footer class="footer" id="footer">
+            <ul class="footer-nav">
+                            <li class="footer-item">
+                                                                        <a href="/month">Calendar</a>
+                                                            </li>
+                            <li class="footer-item">
+                                                                        <a href="/shopping">Store</a>
+                                                            </li>
+                            <li class="footer-item">
+                                                                        <a href="/contact_page">Contact</a>
+                                                            </li>
+                            <li class="footer-item">
+                                            <button class="footer-toggle" type="button" aria-expanded="false">
+                            Media                        </button>
+                        <ul class="footer-subnav" aria-hidden="true">
+                                                            <li class="">
+                                                                            <a href="https://www.instagram.com/launchpadabq/?hl=en">Instagram Photos</a>
+                                                                    </li>
+                                                            <li class="">
+                                                                            <a href="https://www.facebook.com/launchpadrocks/">Facebook Photos</a>
+                                                                    </li>
+                                                            <li class="is-hidden">
+                                                                            <a href="/event_videos">Videos</a>
+                                                                    </li>
+                                                    </ul>
+                                    </li>
+                    </ul>
+        <div class="address">618 Central Ave SW, Albuquerque, NM 87102</div>
+    </footer>
+<script>
+    (() => {
+        const toggles = document.querySelectorAll('.footer-toggle');
+        toggles.forEach((toggle) => {
+            toggle.addEventListener('click', () => {
+                const subnav = toggle.parentElement ? toggle.parentElement.querySelector('.footer-subnav') : null;
+                if (!subnav) {
+                    return;
+                }
+                const isOpen = subnav.classList.toggle('is-open');
+                subnav.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+                toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            });
+        });
+    })();
+</script>
+        </main>
+        <div class="modal" id="event-modal" aria-hidden="true">
+            <div class="modal-shell" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+                <button class="modal-close" type="button" aria-label="Close">×</button>
+                <div class="modal-body" id="modal-body">Loading...</div>
+            </div>
+        </div>
+        <script>
+            (() => {
+                const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (prefersReduced) {
+                    return;
+                }
+
+                const easeInOut = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t);
+                const animateScroll = (from, to, duration, done) => {
+                    const start = performance.now();
+                    const tick = (now) => {
+                        const elapsed = now - start;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = easeInOut(progress);
+                        window.scrollTo(0, from + (to - from) * eased);
+                        if (progress < 1) {
+                            requestAnimationFrame(tick);
+                        } else if (done) {
+                            done();
+                        }
+                    };
+                    requestAnimationFrame(tick);
+                };
+
+                const getViewportHeight = () => {
+                    if (window.visualViewport && window.visualViewport.height) {
+                        return window.visualViewport.height;
+                    }
+                    return window.innerHeight;
+                };
+
+                const getScrollTarget = () => {
+                    const footer = document.querySelector('.footer');
+                    const footerBottom = footer
+                        ? footer.getBoundingClientRect().bottom + window.scrollY
+                        : 0;
+                    const doc = document.documentElement;
+                    const body = document.body;
+                    const docHeight = Math.max(
+                        doc.scrollHeight,
+                        body.scrollHeight,
+                        doc.offsetHeight,
+                        body.offsetHeight,
+                        doc.clientHeight
+                    );
+                    const viewportHeight = getViewportHeight();
+                    const maxScroll = Math.max(0, Math.min(footerBottom || docHeight, docHeight) - viewportHeight);
+
+                    console.log('Footer bottom:', footerBottom);
+                    console.log('Doc height:', docHeight);
+                    console.log('Viewport height:', viewportHeight);
+                    console.log('Max scroll:', maxScroll);
+
+                    return maxScroll;
+                };
+
+                const isHomePath = () => window.location.pathname === '/' || window.location.pathname === '';
+
+                const runLaunchScroll = () => {
+                    if (!isHomePath()) {
+                        return;
+                    }
+                    const maxScroll = getScrollTarget();
+                    if (maxScroll <= 0) {
+                        return;
+                    }
+                    window.scrollTo(0, 0);
+                    animateScroll(0, maxScroll, 300, () => {
+                        setTimeout(() => {
+                            const footer = document.querySelector('.footer');
+                            if (footer) {
+                                footer.classList.add('footer-glow');
+                            }
+                            document.body.classList.add('launch-shake-violent');
+                            setTimeout(() => {
+                                document.body.classList.remove('launch-shake-violent');
+                                document.body.classList.add('launch-shake');
+                                animateScroll(maxScroll, 0, 2160, () => {
+                                    document.body.classList.remove('launch-shake');
+                                    if (footer) {
+                                        footer.classList.remove('footer-glow');
+                                    }
+                                });
+                            }, 320);
+                        }, 250);
+                    });
+                };
+
+                window.addEventListener('load', () => {
+                    requestAnimationFrame(() => {
+                        setTimeout(runLaunchScroll, 120);
+                    });
+                });
+
+                const rocketLink = document.querySelector('.rocket-link');
+                if (rocketLink) {
+                    rocketLink.addEventListener('click', (event) => {
+                        event.preventDefault();
+                        const target = getScrollTarget();
+                        if (target <= 0) {
+                            return;
+                        }
+                        animateScroll(window.scrollY, target, 500);
+                    });
+                }
+
+                const titleEls = document.querySelectorAll('.event-title');
+                titleEls.forEach((titleEl) => {
+                    const textEl = titleEl.querySelector('span');
+                    if (!textEl) {
+                        return;
+                    }
+                    const updateScroll = () => {
+                        const overflow = textEl.scrollWidth - titleEl.clientWidth;
+                        if (overflow > 4) {
+                            const duration = Math.min(10, Math.max(4, overflow / 60));
+                            titleEl.style.setProperty('--scroll-distance', `${overflow}px`);
+                            titleEl.style.setProperty('--scroll-duration', `${duration}s`);
+                            titleEl.classList.add('is-scrolling');
+                        } else {
+                            titleEl.classList.remove('is-scrolling');
+                        }
+                    };
+                    titleEl.addEventListener('mouseenter', updateScroll);
+                    titleEl.addEventListener('mouseleave', () => {
+                        titleEl.classList.remove('is-scrolling');
+                    });
+                });
+
+                const modal = document.getElementById('event-modal');
+                const modalBody = document.getElementById('modal-body');
+                const modalClose = modal ? modal.querySelector('.modal-close') : null;
+                const eventRows = Array.from(document.querySelectorAll('.event-row'));
+                let frameActive = false;
+                let activeEventId = null;
+                const basePath = '/';
+                const eventPathPrefix = '/event/';
+                const eventsEndpoint = '/events.php';
+
+                if (modalBody) {
+                    modalBody.addEventListener('click', (event) => {
+                        const trigger = event.target.closest('.calendars > a');
+                        if (!trigger) {
+                            return;
+                        }
+                        event.preventDefault();
+                        const container = trigger.closest('.calendars');
+                        const options = container ? container.querySelector('#calendar-options') : null;
+                        if (!options) {
+                            return;
+                        }
+                        const isOpen = options.style.display === 'block';
+                        options.style.display = isOpen ? 'none' : 'block';
+                    });
+
+                    modalBody.addEventListener('click', (event) => {
+                        const trigger = event.target.closest('.venuelink');
+                        if (!trigger) {
+                            return;
+                        }
+                        event.preventDefault();
+                        const container = trigger.closest('.venue-details');
+                        const details = container ? container.querySelector('#venue-more') : null;
+                        if (!details) {
+                            return;
+                        }
+                        const isOpen = details.style.display === 'block';
+                        details.style.display = isOpen ? 'none' : 'block';
+                    });
+                }
+
+                const getEventIdFromPath = () => {
+                    const path = window.location.pathname || '';
+                    if (!path.startsWith(eventPathPrefix)) {
+                        return null;
+                    }
+                    const id = path.slice(eventPathPrefix.length).split('/')[0];
+                    return /^[0-9]+$/.test(id) ? id : null;
+                };
+
+                const frameRows = () => {
+                    const total = eventRows.length;
+                    if (!total) {
+                        return;
+                    }
+
+                    const baseScale = 1;
+                    const frameGap = 28;
+                    const framePadding = 24;
+                    const modalShell = modal ? modal.querySelector('.modal-shell') : null;
+                    const modalRect = modalShell ? modalShell.getBoundingClientRect() : null;
+                    const modalWidth = modalRect ? modalRect.width : 0;
+                    const modalHeight = modalRect ? modalRect.height : 0;
+                    const frameRect = {
+                        left: framePadding,
+                        right: window.innerWidth - framePadding,
+                        top: framePadding,
+                        bottom: window.innerHeight - framePadding,
+                    };
+                    console.log('Modal rect:', modalRect);
+                    // console.log('Frame offset:', frameOffsetX, frameOffsetY);
+                    console.log('Frame rect:', frameRect);
+                    const groups = {
+                        top: [],
+                        right: [],
+                        bottom: [],
+                        left: [],
+                    };
+                    eventRows.forEach((row, index) => {
+                        const slot = index % 4;
+                        if (slot === 0) groups.top.push(row);
+                        if (slot === 1) groups.right.push(row);
+                        if (slot === 2) groups.bottom.push(row);
+                        if (slot === 3) groups.left.push(row);
+                    });
+
+                    const randomInRange = (min, max) => min + Math.random() * (max - min);
+
+                    const positionRow = (row, side) => {
+                        const viewportHeight = getViewportHeight();
+                        const rect = row.getBoundingClientRect();
+                        const scale = baseScale;
+                        let targetX = rect.left;
+                        let targetY = rect.top;
+                        let rotate = 0;
+
+                        if (side === 'top') {
+                            targetX = randomInRange(frameRect.left, frameRect.right - rect.width * scale);
+                            targetY = frameRect.top + frameGap - rect.height * scale;
+                            // targetX = 0;
+                            // targetY = 0;
+                        }
+
+                        if (side === 'bottom') {
+                            targetX = randomInRange(frameRect.left, frameRect.right - rect.width * scale);
+                            targetY = frameRect.bottom - frameGap;
+                        }
+
+                        if (side === 'left') {
+                            targetX = frameRect.left - frameGap - rect.height * scale - (modalWidth * 0.5);
+                            if (window.matchMedia('(max-width: 640px)').matches) {
+                                targetX = frameRect.right * -0.5 + frameGap / 2
+                            }                            
+                            targetY = viewportHeight / 2;//randomInRange(frameRect.top, frameRect.bottom - rect.width * scale) + (modalHeight * 0.5); //frameRect.bottom - rect.width * scale) + (modalHeight)
+                            rotate = -90;
+                        }
+
+                        if (side === 'right') {
+
+                            // targetX = frameRect.right - (modalWidth * 1);
+                            // if (window.matchMedia('(max-width: 640px)').matches) {
+                            //     targetX = frameRect.right * 0.5
+                            // }
+                            // targetY = randomInRange(frameRect.top, frameRect.bottom - rect.width * scale + modalHeight * 1.5);
+                            // rotate = 90;
+                            rotate = 90;
+                            targetX = frameRect.left + frameGap + (modalWidth * 0.5)
+                            if (window.matchMedia('(max-width: 640px)').matches) {
+                                targetX = frameRect.right * 0.5
+                            }                           
+                            targetY = viewportHeight / 2; //randomInRange(frameRect.top, frameRect.bottom - rect.width * scale) + (modalHeight * 0.5); //frameRect.bottom - rect.width * scale) + (modalHeight)
+                        }
+
+                        // if (side === 'top') {
+                        //     targetX = randomInRange(frameRect.left, frameRect.right - rect.width * scale);
+                        //     targetY = frameRect.top + frameGap - rect.height * scale;
+                        //     // targetX = 0;
+                        //     // targetY = 0;
+                        // }
+
+                        // if (side === 'bottom') {
+                        //     targetX = randomInRange(frameRect.left, frameRect.right - rect.width * scale);
+                        //     targetY = frameRect.bottom - frameGap;
+                        // }
+
+                        // if (side === 'left') {
+                        //     targetX = frameRect.left - frameGap;
+                        //     targetY = randomInRange(frameRect.top, frameRect.bottom - rect.width * scale);
+                        //     rotate = -90;
+                        // }
+
+                        // if (side === 'right') {
+                        //     targetX = frameRect.right + frameGap;
+                        //     targetY = randomInRange(frameRect.top, frameRect.bottom - rect.width * scale);
+                        //     rotate = 90;
+                        // }
+
+                        const deltaX = targetX - rect.left;
+                        const deltaY = targetY - rect.top;
+                        row.style.transform = `translate(${deltaX}px, ${deltaY}px) rotate(${rotate}deg) scale(${scale})`;
+                    };
+
+                    groups.top.forEach((row) => positionRow(row, 'top'));
+                    groups.right.forEach((row) => positionRow(row, 'right'));
+                    groups.bottom.forEach((row) => positionRow(row, 'bottom'));
+                    groups.left.forEach((row) => positionRow(row, 'left'));
+                };
+
+                const resetRows = () => {
+                    eventRows.forEach((row) => {
+                        row.style.transform = '';
+                    });
+                };
+
+                const repositionBuy = () => {
+                    if (!modalBody) {
+                        return;
+                    }
+                    const buy = modalBody.querySelector('.buy');
+                    if (!buy) {
+                        return;
+                    }
+                    const eventTop = modalBody.querySelector('.event-top');
+                    const flyer = modalBody.querySelector('.flyer');
+                    const headerBox = modalBody.querySelector('.header-event-box');
+                    if (eventTop && flyer && headerBox) {
+                        eventTop.insertBefore(buy, headerBox);
+                        return;
+                    }
+                    const title = modalBody.querySelector('h1');
+                    if (title && title.parentElement) {
+                        title.parentElement.insertBefore(buy, title);
+                    }
+                };
+
+                const openModal = (html) => {
+                    if (!modal || !modalBody) {
+                        return;
+                    }
+                    modalBody.innerHTML = html;
+                    repositionBuy();
+                    modal.classList.add('is-open');
+                    modal.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('modal-open');
+                    document.documentElement.classList.add('modal-open');
+                    if (!frameActive) {
+                        frameActive = true;
+                        setTimeout(() => {
+                            requestAnimationFrame(frameRows);    
+                        }, 500);
+                        
+                    }
+                };
+                const closeModal = () => {
+                    if (!modal) {
+                        return;
+                    }
+                    modal.classList.remove('is-open');
+                    modal.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('modal-open');
+                    document.documentElement.classList.remove('modal-open');
+                    if (activeEventId) {
+                        history.pushState({ eventId: null }, '', basePath);
+                        activeEventId = null;
+                    }
+                    if (frameActive) {
+                        resetRows();
+                        frameActive = false;
+                    }
+                };
+                if (modal && modalClose) {
+                    modal.addEventListener('click', (event) => {
+                        if (event.target === modal) {
+                            closeModal();
+                        }
+                    });
+                    modalClose.addEventListener('click', closeModal);
+                    document.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            closeModal();
+                        }
+                    });
+                }
+
+                document.querySelectorAll('.event-row').forEach((row) => {
+                    row.addEventListener('click', async () => {
+                        const eventId = row.getAttribute('data-event-id');
+                        if (!eventId) {
+                            return;
+                        }
+                        activeEventId = eventId;
+                        history.pushState({ eventId }, '', `${eventPathPrefix}${eventId}`);
+                        openModal('Loading...');
+                        try {
+                            const response = await fetch(`${eventsEndpoint}?event_id=${encodeURIComponent(eventId)}`);
+                            console.log('Fetch response:', response);
+                            // if (!response.ok) {
+                            //     throw new Error('Request failed');
+                            // }
+                            const html = await response.text();
+                            openModal(html);
+                        } catch (error) {
+                            openModal('Unable to load event details right now.');
+                        }
+                    });
+                });
+
+                window.addEventListener('popstate', (event) => {
+                    const stateEventId = event.state && event.state.eventId ? String(event.state.eventId) : null;
+                    const pathEventId = getEventIdFromPath();
+                    const nextEventId = stateEventId || pathEventId;
+                    if (!nextEventId) {
+                        if (modal && modal.classList.contains('is-open')) {
+                            closeModal();
+                        }
+                        return;
+                    }
+                    if (nextEventId === activeEventId && modal && modal.classList.contains('is-open')) {
+                        return;
+                    }
+                    activeEventId = nextEventId;
+                    openModal('Loading...');
+                    fetch(`${eventsEndpoint}?event_id=${encodeURIComponent(nextEventId)}`)
+                        .then((response) => response.text())
+                        .then((html) => openModal(html))
+                        .catch(() => openModal('Unable to load event details right now.'));
+                });
+
+                const initialEventId = getEventIdFromPath();
+                if (initialEventId) {
+                    activeEventId = initialEventId;
+                    history.replaceState({ eventId: initialEventId }, '', `${eventPathPrefix}${initialEventId}`);
+                    openModal('Loading...');
+                    fetch(`${eventsEndpoint}?event_id=${encodeURIComponent(initialEventId)}`)
+                        .then((response) => response.text())
+                        .then((html) => openModal(html))
+                        .catch(() => openModal('Unable to load event details right now.'));
+                }
+            })();
+        </script>
+    </body>
+</html>
